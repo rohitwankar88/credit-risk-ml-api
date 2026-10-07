@@ -1,0 +1,6 @@
+case_study1.xlsx
+case_study2.xlsx
+create_test_json.py
+test_request.json
+__pycache__/
+*.pyc

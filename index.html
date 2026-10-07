@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Risk Prediction</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            color: #263238;
+        }
+
+        .container {
+            width: 92%;
+            max-width: 1200px;
+            margin: 35px auto;
+        }
+
+        .header {
+            background: #ffffff;
+            padding: 28px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+            margin-bottom: 22px;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            color: #1f5f8b;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #607d8b;
+            margin: 0;
+        }
+
+        .section {
+            background: #ffffff;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+            margin-bottom: 22px;
+        }
+
+        .section h2 {
+            margin-top: 0;
+            color: #1f5f8b;
+            border-bottom: 1px solid #e0e6ed;
+            padding-bottom: 10px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .field label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .field input,
+        .field select {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #cfd8dc;
+            border-radius: 6px;
+            font-size: 14px;
+            background: #fff;
+        }
+
+        .field input:focus,
+        .field select:focus {
+            outline: none;
+            border-color: #1f5f8b;
+        }
+
+        .button-area {
+            text-align: center;
+            margin: 25px 0;
+        }
+
+        button {
+            background: #1f5f8b;
+            color: white;
+            border: none;
+            padding: 14px 42px;
+            border-radius: 7px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:disabled {
+            background: #90a4ae;
+            cursor: not-allowed;
+        }
+
+        #loading {
+            display: none;
+            text-align: center;
+            margin: 15px;
+            color: #607d8b;
+            font-weight: bold;
+        }
+
+        #error {
+            display: none;
+            background: #ffebee;
+            color: #c62828;
+            padding: 14px;
+            border-radius: 7px;
+            margin-top: 15px;
+            white-space: pre-wrap;
+        }
+
+        #result {
+            display: none;
+            margin-top: 25px;
+            padding: 25px;
+            border-radius: 10px;
+            background: #f8fafc;
+            border: 1px solid #dce4ec;
+        }
+
+        .prediction {
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: #1f5f8b;
+            margin: 10px 0 25px;
+        }
+
+        .probability-row {
+            display: grid;
+            grid-template-columns: 70px 1fr 80px;
+            align-items: center;
+            gap: 10px;
+            margin: 12px 0;
+        }
+
+        .bar {
+            height: 18px;
+            background: #e0e6ed;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            width: 0%;
+            background: #1f5f8b;
+            transition: width 0.5s ease;
+        }
+
+        .probability-value {
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .note {
+            color: #607d8b;
+            font-size: 13px;
+            margin-top: 6px;
+        }
+
+        @media (max-width: 900px) {
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>Credit Risk Prediction System</h1>
+        <p class="subtitle">
+            XGBoost Machine Learning Model
+        </p>
+    </div>
+
+    <form id="creditRiskForm">
+
+        <div class="section">
+            <h2>Customer Information</h2>
+
+            <div class="grid">
+
+                <div class="field">
+                    <label for="AGE">Age</label>
+                    <input type="number" id="AGE" name="AGE" value="48" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="NETMONTHLYINCOME">Net Monthly Income</label>
+                    <input type="number" id="NETMONTHLYINCOME" name="NETMONTHLYINCOME" value="51000" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="Time_With_Curr_Empr">Time With Current Employer</label>
+                    <input type="number" id="Time_With_Curr_Empr" name="Time_With_Curr_Empr" value="114" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="Credit_Score">Credit Score</label>
+                    <input type="number" id="Credit_Score" name="Credit_Score" value="696" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="EDUCATION">Education</label>
+                    <select id="EDUCATION" name="EDUCATION" required>
+                        <option value="SSC">SSC</option>
+                        <option value="12TH" selected>12TH</option>
+                        <option value="GRADUATE">GRADUATE</option>
+                        <option value="UNDER GRADUATE">UNDER GRADUATE</option>
+                        <option value="POST-GRADUATE">POST-GRADUATE</option>
+                        <option value="OTHERS">OTHERS</option>
+                        <option value="PROFESSIONAL">PROFESSIONAL</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="MARITALSTATUS">Marital Status</label>
+                    <select id="MARITALSTATUS" name="MARITALSTATUS" required>
+                        <option value="Married" selected>Married</option>
+                        <option value="Single">Single</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="GENDER">Gender</label>
+                    <select id="GENDER" name="GENDER" required>
+                        <option value="M" selected>Male</option>
+                        <option value="F">Female</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="last_prod_enq2">Last Product Enquiry</label>
+                    <select id="last_prod_enq2" name="last_prod_enq2" required>
+                        <option value="AL">AL</option>
+                        <option value="CC">CC</option>
+                        <option value="ConsumerLoan">ConsumerLoan</option>
+                        <option value="HL">HL</option>
+                        <option value="PL" selected>PL</option>
+                        <option value="others">others</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="first_prod_enq2">First Product Enquiry</label>
+                    <select id="first_prod_enq2" name="first_prod_enq2" required>
+                        <option value="AL">AL</option>
+                        <option value="CC">CC</option>
+                        <option value="ConsumerLoan">ConsumerLoan</option>
+                        <option value="HL">HL</option>
+                        <option value="PL" selected>PL</option>
+                        <option value="others">others</option>
+                    </select>
+                </div>
+
+            </div>
+        </div>
+
+
+        <div class="section">
+            <h2>Loan & Account Information</h2>
+
+            <div class="grid">
+
+                <div class="field">
+                    <label for="Total_TL_opened_L6M">Total TL Opened L6M</label>
+                    <input type="number" id="Total_TL_opened_L6M" value="0" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="Tot_TL_closed_L6M">Total TL Closed L6M</label>
+                    <input type="number" id="Tot_TL_closed_L6M" value="0" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="pct_tl_open_L6M">TL Open % L6M</label>
+                    <input type="number" id="pct_tl_open_L6M" value="0" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="pct_tl_closed_L6M">TL Closed % L6M</label>
+                    <input type="number" id="pct_tl_closed_L6M" value="0" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="pct_tl_open_L12M">TL Open % L12M</label>
+                    <input type="number" id="pct_tl_open_L12M" value="0" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="pct_tl_closed_L12M">TL Closed % L12M</label>
+                    <input type="number" id="pct_tl_closed_L12M" value="0" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="CC_TL">Credit Card TL</label>
+                    <input type="number" id="CC_TL" value="0" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="Consumer_TL">Consumer TL</label>
+                    <input type="number" id="Consumer_TL" value="0" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="Gold_TL">Gold TL</label>
+                    <input type="number" id="Gold_TL" value="1" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="Home_TL">Home TL</label>
+                    <input type="number" id="Home_TL" value="0" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="PL_TL">Personal Loan TL</label>
+                    <input type="number" id="PL_TL" value="4" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="Other_TL">Other TL</label>
+                    <input type="number" id="Other_TL" value="0" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="Age_Oldest_TL">Age Oldest TL</label>
+                    <input type="number" id="Age_Oldest_TL" value="72" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="Age_Newest_TL">Age Newest TL</label>
+                    <input type="number" id="Age_Newest_TL" value="18" step="any" required>
+                </div>
+
+            </div>
+        </div>
+
+
+        <div class="section">
+            <h2>Payment & Delinquency Information</h2>
+
+            <div class="grid">
+
+                <div class="field">
+                    <label for="Tot_Missed_Pmnt">Total Missed Payments</label>
+                    <input type="number" id="Tot_Missed_Pmnt" value="0" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="time_since_recent_payment">Time Since Recent Payment</label>
+                    <input type="number" id="time_since_recent_payment" value="549" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="num_times_delinquent">Number of Times Delinquent</label>
+                    <input type="number" id="num_times_delinquent" value="11" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="max_recent_level_of_deliq">Max Recent Level of Deliq</label>
+                    <input type="number" id="max_recent_level_of_deliq" value="29" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="num_deliq_6_12mts">Deliq 6-12 Months</label>
+                    <input type="number" id="num_deliq_6_12mts" value="0" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="num_times_60p_dpd">Times 60+ DPD</label>
+                    <input type="number" id="num_times_60p_dpd" value="0" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="num_std">Number Standard</label>
+                    <input type="number" id="num_std" value="21" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="num_std_6mts">Standard 6 Months</label>
+                    <input type="number" id="num_std_6mts" value="5" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="num_sub">Number Sub</label>
+                    <input type="number" id="num_sub" value="0" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="num_sub_6mts">Sub 6 Months</label>
+                    <input type="number" id="num_sub_6mts" value="0" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="num_sub_12mts">Sub 12 Months</label>
+                    <input type="number" id="num_sub_12mts" value="0" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="num_dbt">Number DBT</label>
+                    <input type="number" id="num_dbt" value="0" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="num_dbt_6mts">DBT 6 Months</label>
+                    <input type="number" id="num_dbt_6mts" value="0" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="num_lss">Number LSS</label>
+                    <input type="number" id="num_lss" value="0" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="recent_level_of_deliq">Recent Level of Deliq</label>
+                    <input type="number" id="recent_level_of_deliq" value="29" step="any" required>
+                </div>
+
+            </div>
+        </div>
+
+
+        <div class="section">
+            <h2>Enquiry Information</h2>
+
+            <div class="grid">
+
+                <div class="field">
+                    <label for="tot_enq">Total Enquiries</label>
+                    <input type="number" id="tot_enq" value="6" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="CC_enq">CC Enquiries</label>
+                    <input type="number" id="CC_enq" value="0" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="CC_enq_L6m">CC Enquiries L6M</label>
+                    <input type="number" id="CC_enq_L6m" value="0" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="PL_enq">PL Enquiries</label>
+                    <input type="number" id="PL_enq" value="6" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="PL_enq_L6m">PL Enquiries L6M</label>
+                    <input type="number" id="PL_enq_L6m" value="0" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="time_since_recent_enq">Time Since Recent Enquiry</label>
+                    <input type="number" id="time_since_recent_enq" value="566" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="enq_L3m">Enquiries L3M</label>
+                    <input type="number" id="enq_L3m" value="0" step="any" required>
+                </div>
+
+            </div>
+        </div>
+
+
+        <div class="section">
+            <h2>Credit & Loan Flags</h2>
+
+            <div class="grid">
+
+                <div class="field">
+                    <label for="pct_of_active_TLs_ever">Active TL % Ever</label>
+                    <input type="number" id="pct_of_active_TLs_ever" value="0.2" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="pct_opened_TLs_L6m_of_L12m">Opened TL % L6M of L12M</label>
+                    <input type="number" id="pct_opened_TLs_L6m_of_L12m" value="0" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="CC_Flag">CC Flag</label>
+                    <select id="CC_Flag" required>
+                        <option value="0" selected>0</option>
+                        <option value="1">1</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="PL_Flag">PL Flag</label>
+                    <select id="PL_Flag" required>
+                        <option value="0">0</option>
+                        <option value="1" selected>1</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="pct_PL_enq_L6m_of_ever">PL Enquiry % L6M of Ever</label>
+                    <input type="number" id="pct_PL_enq_L6m_of_ever" value="0" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="pct_CC_enq_L6m_of_ever">CC Enquiry % L6M of Ever</label>
+                    <input type="number" id="pct_CC_enq_L6m_of_ever" value="0" step="any" required>
+                </div>
+
+                <div class="field">
+                    <label for="HL_Flag">HL Flag</label>
+                    <select id="HL_Flag" required>
+                        <option value="0" selected>0</option>
+                        <option value="1">1</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="GL_Flag">GL Flag</label>
+                    <select id="GL_Flag" required>
+                        <option value="0" selected>0</option>
+                        <option value="1">1</option>
+                    </select>
+                </div>
+
+            </div>
+        </div>
+
+
+        <div class="button-area">
+            <button type="submit" id="predictButton">Predict Credit Risk</button>
+        </div>
+
+    </form>
+
+
+    <div id="loading">Predicting... Please wait.</div>
+
+    <div id="error"></div>
+
+
+    <div id="result">
+        <h2>Prediction Result</h2>
+
+        <div class="prediction">
+            Risk Category: <span id="prediction">-</span>
+        </div>
+
+        <div class="probability-row">
+            <strong>P1</strong>
+            <div class="bar"><div class="bar-fill" id="barP1"></div></div>
+            <span class="probability-value" id="probP1">0%</span>
+        </div>
+
+        <div class="probability-row">
+            <strong>P2</strong>
+            <div class="bar"><div class="bar-fill" id="barP2"></div></div>
+            <span class="probability-value" id="probP2">0%</span>
+        </div>
+
+        <div class="probability-row">
+            <strong>P3</strong>
+            <div class="bar"><div class="bar-fill" id="barP3"></div></div>
+            <span class="probability-value" id="probP3">0%</span>
+        </div>
+
+        <div class="probability-row">
+            <strong>P4</strong>
+            <div class="bar"><div class="bar-fill" id="barP4"></div></div>
+            <span class="probability-value" id="probP4">0%</span>
+        </div>
+    </div>
+
+</div>
+
+
+<script>
+
+    const API_URL = "http://127.0.0.1:8000/predict";
+
+    const form = document.getElementById("creditRiskForm");
+    const button = document.getElementById("predictButton");
+    const loading = document.getElementById("loading");
+    const result = document.getElementById("result");
+    const errorBox = document.getElementById("error");
+
+
+    const numericFields = [
+        "Total_TL_opened_L6M",
+        "Tot_TL_closed_L6M",
+        "pct_tl_open_L6M",
+        "pct_tl_closed_L6M",
+        "pct_tl_open_L12M",
+        "pct_tl_closed_L12M",
+        "Tot_Missed_Pmnt",
+        "CC_TL",
+        "Consumer_TL",
+        "Gold_TL",
+        "Home_TL",
+        "PL_TL",
+        "Other_TL",
+        "Age_Oldest_TL",
+        "Age_Newest_TL",
+        "time_since_recent_payment",
+        "num_times_delinquent",
+        "max_recent_level_of_deliq",
+        "num_deliq_6_12mts",
+        "num_times_60p_dpd",
+        "num_std",
+        "num_std_6mts",
+        "num_sub",
+        "num_sub_6mts",
+        "num_sub_12mts",
+        "num_dbt",
+        "num_dbt_6mts",
+        "num_lss",
+        "recent_level_of_deliq",
+        "tot_enq",
+        "CC_enq",
+        "CC_enq_L6m",
+        "PL_enq",
+        "PL_enq_L6m",
+        "time_since_recent_enq",
+        "enq_L3m",
+        "AGE",
+        "NETMONTHLYINCOME",
+        "Time_With_Curr_Empr",
+        "pct_of_active_TLs_ever",
+        "pct_opened_TLs_L6m_of_L12m",
+        "CC_Flag",
+        "PL_Flag",
+        "pct_PL_enq_L6m_of_ever",
+        "pct_CC_enq_L6m_of_ever",
+        "HL_Flag",
+        "GL_Flag",
+        "Credit_Score"
+    ];
+
+
+    function getValue(id) {
+        const element = document.getElementById(id);
+        return element.value;
+    }
+
+
+    form.addEventListener("submit", async function(event) {
+
+        event.preventDefault();
+
+        result.style.display = "none";
+        errorBox.style.display = "none";
+        loading.style.display = "block";
+        button.disabled = true;
+
+        try {
+
+            const data = {};
+
+            numericFields.forEach(function(field) {
+                data[field] = Number(getValue(field));
+            });
+
+            data["MARITALSTATUS"] = getValue("MARITALSTATUS");
+            data["EDUCATION"] = getValue("EDUCATION");
+            data["GENDER"] = getValue("GENDER");
+            data["last_prod_enq2"] = getValue("last_prod_enq2");
+            data["first_prod_enq2"] = getValue("first_prod_enq2");
+
+
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+
+
+            const responseData = await response.json();
+
+
+            if (!response.ok) {
+                throw new Error(
+                    responseData.detail
+                    ? JSON.stringify(responseData.detail, null, 2)
+                    : "Prediction request failed."
+                );
+            }
+
+
+            document.getElementById("prediction").textContent =
+                responseData.prediction;
+
+
+            const probabilities = responseData.probabilities;
+
+
+            ["P1", "P2", "P3", "P4"].forEach(function(className) {
+
+                const probability = Number(probabilities[className] || 0);
+                const percentage = (probability * 100).toFixed(2);
+
+                document.getElementById("prob" + className).textContent =
+                    percentage + "%";
+
+                document.getElementById("bar" + className).style.width =
+                    percentage + "%";
+
+            });
+
+
+            result.style.display = "block";
+
+            result.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+
+        } catch (error) {
+
+            errorBox.textContent =
+                "Error: " + error.message;
+
+            errorBox.style.display = "block";
+
+        } finally {
+
+            loading.style.display = "none";
+            button.disabled = false;
+
+        }
+
+    });
+
+</script>
+
+</body>
+</html>
