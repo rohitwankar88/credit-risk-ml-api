@@ -144,8 +144,16 @@ The model artifact files must be present at the paths expected by `app.py`.
 
 ## Screenshots
 
-Add screenshots captured from the running application, then uncomment or update these paths.
+## Screenshots
 
+### Frontend
+![Frontend screenshot](screenshots/Screenshot%20(134).png)
+
+### Prediction Result
+![Prediction result](screenshots/Screenshot%20(135).png)
+
+### API / Project View
+![API and project screenshot](screenshots/Screenshot%20(136).png)
 <!--
 ### Frontend
 ![Frontend interface](screenshots/frontend.png)
